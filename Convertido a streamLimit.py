@@ -1,53 +1,48 @@
 import streamlit as st
 
-# Configuración de página
-st.set_page_config(page_title="Calculadora", page_icon="🧮", layout="centered")
+# --- Configuración de la página ---
+st.set_page_config(
+    page_title="Calculadora",
+    layout="centered"
+)
 
-# === Estilos con fondo ===
-page_bg = """
-<style>
-[data-testid="stAppViewContainer"] {
-    background: url("7359978.jpg");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-}
+# Fondo con la imagen de emojis 🎉
+st.markdown("""
+    <style>
+    .stApp {
+        background-image: url("https://raw.githubusercontent.com/AlanYahir450/Calculadora-/main/7359978.jpg");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+    h1, label, .stMarkdown, .stTextInput label, .stSelectbox label, .stNumberInput label {
+        color: black !important;
+        font-weight: bold;
+    }
+    .stButton button {
+        background-color: #ff4081;
+        color: white;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+    }
+    .stButton button:hover {
+        background-color: #e91e63;
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-[data-testid="stHeader"] {
-    background: rgba(0,0,0,0);
-}
+st.title("Calculadora")
 
-.block-container {
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 20px;
-    padding: 30px;
-    margin-top: 50px;
-    box-shadow: 0 0 25px rgba(0,0,0,0.15);
-}
-
-h1 {
-    color: #ff4081;
-    text-align: center;
-    font-weight: 900;
-}
-
-label, p, div, span {
-    color: #000000 !important;
-}
-</style>
-"""
-st.markdown(page_bg, unsafe_allow_html=True)
-
-# === Título ===
-st.markdown("<h1>Calculadora</h1>", unsafe_allow_html=True)
-
-# === Categorías ===
+# --- Categorías de conversión ---
 categorias = {
     "Longitud": {
         "milímetro": 0.001,
         "centímetro": 0.01,
-        "metro": 1,
-        "kilómetro": 1000,
+        "metro": 1.0,
+        "kilómetro": 1000.0,
         "pulgada": 0.0254,
         "pie": 0.3048,
         "yarda": 0.9144,
@@ -55,42 +50,51 @@ categorias = {
     },
     "Masa": {
         "miligramo": 0.001,
-        "gramo": 1,
-        "kilogramo": 1000,
-        "tonelada": 1000000,
+        "gramo": 1.0,
+        "kilogramo": 1000.0,
+        "tonelada": 1_000_000.0,
         "onza": 28.3495,
-        "libra": 453.592
+        "libra": 453.592,
+        "tonelada corta": 907_185.0,
+        "tonelada larga": 1_016_046.9
     },
     "Velocidad y Aceleración": {
-        "metro/segundo": 1,
-        "kilómetro/hora": 0.277778,
-        "milla/hora": 0.44704,
+        "m/s": 1.0,
+        "km/h": 0.277778,
+        "mph": 0.44704,
         "nudo": 0.514444,
-        "pie/segundo": 0.3048
+        "ft/s": 0.3048
     },
     "Fuerza": {
-        "newton": 1,
-        "kilonewton": 1000,
+        "newton": 1.0,
+        "kilonewton": 1000.0,
         "libra-fuerza": 4.44822,
-        "dina": 0.00001,
+        "dina": 1e-5,
         "kilogramo-fuerza": 9.80665
     },
-    "Temperatura": {
-        "Celsius": "C",
-        "Fahrenheit": "F",
-        "Kelvin": "K"
-    }
+    "Temperatura": None
 }
 
-# === Selección de categoría ===
+# --- Interfaz de selección ---
 categoria = st.selectbox("Selecciona una categoría:", list(categorias.keys()))
 
-# === Lógica de conversión ===
-if categoria == "Temperatura":
+if categoria != "Temperatura":
     unidades = list(categorias[categoria].keys())
     origen = st.selectbox("Unidad de origen:", unidades)
     destino = st.selectbox("Unidad destino:", unidades)
-    valor = st.number_input(f"Valor en {origen.lower()}:", format="%.2f", step=0.1)
+    valor = st.number_input(f"Valor en {origen}:", min_value=0.0, format="%.6f")
+
+    if st.button("Calcular"):
+        if origen == destino:
+            resultado = valor
+        else:
+            resultado = valor * categorias[categoria][origen] / categorias[categoria][destino]
+        st.success(f"✅ {valor:.6f} {origen} equivalen a {resultado:.6f} {destino}")
+
+else:
+    origen = st.selectbox("Unidad de origen:", ["Celsius", "Fahrenheit", "Kelvin"])
+    destino = st.selectbox("Unidad destino:", ["Celsius", "Fahrenheit", "Kelvin"])
+    valor = st.number_input(f"Valor en {origen}:", format="%.2f")
 
     if st.button("Calcular"):
         resultado = None
@@ -110,18 +114,4 @@ if categoria == "Temperatura":
             resultado = (valor - 273.15) * 9/5 + 32
 
         if resultado is not None:
-            st.success(f"🌡️ {valor} {origen} equivalen a {resultado:.2f} {destino}")
-
-else:
-    unidades = list(categorias[categoria].keys())
-    origen = st.selectbox("Unidad de origen:", unidades)
-    destino = st.selectbox("Unidad destino:", unidades)
-    valor = st.number_input(f"Valor en {origen.lower()}:", format="%.5f", step=0.1)
-
-    if st.button("Calcular"):
-        try:
-            valor_base = valor * categorias[categoria][origen]
-            resultado = valor_base / categorias[categoria][destino]
-            st.success(f"✅ {valor:.5f} {origen} equivalen a {resultado:.5f} {destino}")
-        except Exception as e:
-            st.error("Error en la conversión. Verifica las unidades seleccionadas.")
+            st.success(f"✅ {valor:.2f} {origen} equivalen a {resultado:.2f} {destino}")
